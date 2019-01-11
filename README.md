@@ -8,9 +8,9 @@ This simulator is intended for training reinforcement learning algorithms to pla
 
 ## Installation
 
-PySumo requires you to install the libraries in requirements.txt, as well as 222464/OgmaNeo2 and the OgmaCorp/PyOgmaNeo2 wrapper.
+PySumo requires you to install the libraries in requirements.txt, as well as [222464/OgmaNeo2](https://github.com/222464/OgmaNeo2/tree/CPU_Q_Epsilon) and the [OgmaCorp/PyOgmaNeo2](https://github.com/ogmacorp/PyOgmaNeo2/tree/CPU_Q_Epsilon) wrapper.
 
-The OgmaNeo2 branch compatible with this simulator is the CPU_Q_Epsilon branch (same goes for PyOgmaNeo2),
+The OgmaNeo2 branch compatible with this simulator is the [CPU_Q_Epsilon branch](https://github.com/222464/OgmaNeo2/tree/CPU_Q_Epsilon) (same goes for [PyOgmaNeo2](https://github.com/ogmacorp/PyOgmaNeo2/tree/CPU_Q_Epsilon)),
 although other branches should be compatible as well as long as they support reinforcement learning.
 
 1. Install the requirements.txt file
