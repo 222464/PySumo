@@ -14,7 +14,7 @@ class Bot:
 
         self.mass = 1.0
         self.size = (2.0, 2.0)
-        self.rotationDamping = 0.75
+        self.rotationDamping = 0.7
         
         moment = pymunk.moment_for_box(self.mass, self.size)
 

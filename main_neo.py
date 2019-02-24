@@ -29,14 +29,18 @@ class Sumo(arcade.Window):
         self.bot0RightMotor = 0.0
         self.bot0Boost = False
 
+        self.actions0 = [ [ 0, 0 ], [ 0 ] ]
+
         self.bot1LeftMotor = 0.0
         self.bot1RightMotor = 0.0
         self.bot1Boost = False
 
+        self.actions1 = [ [ 0, 0 ], [ 0 ] ]
+
         ########################### Create Agents ###########################
 
-        # Sensors: arena distance from center, angle relative to center, distance from opponent, angle to opponent, angle between opponents
-        # Actions: Left motor, right motor
+        # Sensors: arena distance from center, angle relative to center, distance from opponent, angle to opponent, angle between opponents, boost
+        # Actions: Left motor, right motor, boost
 
         self.cs = pyogmaneo.PyComputeSystem(8)
 
@@ -44,15 +48,17 @@ class Sumo(arcade.Window):
 
         for i in range(2):
             ld = pyogmaneo.PyLayerDesc()
-            ld._hiddenSize = PyInt3(4, 4, 16)
+            ld._hiddenSize = PyInt3(2, 2, 32)
 
             lds.append(ld)
 
-        self.inputSizes = [ PyInt3(3, 2, 32), PyInt3(2, 1, 9), PyInt3(1, 1, 2) ]
+        self.inputSizes = [ PyInt3(3, 2, 16), PyInt3(2, 1, 5), PyInt3(1, 1, 2) ]
 
         self.h0 = pyogmaneo.PyHierarchy(self.cs, self.inputSizes, [ pyogmaneo._inputTypeNone, pyogmaneo._inputTypeAct, pyogmaneo._inputTypeAct ], lds)
         self.h1 = pyogmaneo.PyHierarchy(self.cs, self.inputSizes, [ pyogmaneo._inputTypeNone, pyogmaneo._inputTypeAct, pyogmaneo._inputTypeAct ], lds)
 
+        self.epsilon = 0.05
+        
     def on_draw(self):
         arcade.start_render()
         
@@ -120,13 +126,22 @@ class Sumo(arcade.Window):
             # Step
             assert(len(sensorSDR) == 6)
             
-            self.h0.step(self.cs, [ sensorSDR, self.h0.getActionCs(1), self.h0.getActionCs(2) ], reward - 0.001 * distToOpponent, True)
+            self.h0.step(self.cs, [ sensorSDR, self.actions0[0], self.actions0[1] ], reward - distToOpponent * 0.001, True)
+
+            self.actions0[0] = list(self.h0.getActionCs(1))
+            self.actions0[1] = list(self.h0.getActionCs(2))
+
+            # Explore
+            for i in range(len(self.actions0)):
+                for j in range(len(self.actions0[i])):
+                    if np.random.rand() < self.epsilon:
+                        self.actions0[i][j] = np.random.randint(0, self.inputSizes[i + 1].z)
 
             # Actions
-            self.bot0LeftMotor = self.h0.getActionCs(1)[0] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
-            self.bot0RightMotor = self.h0.getActionCs(1)[1] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
+            self.bot0LeftMotor = self.actions0[0][0] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
+            self.bot0RightMotor = self.actions0[0][1] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
 
-            self.bot0Boost = bool(self.h0.getActionCs(2)[0])
+            self.bot0Boost = bool(self.actions0[1][0])
 
         elif botIndex == 1:
             # Gather sensors (all in [0, 1] range)
@@ -178,13 +193,22 @@ class Sumo(arcade.Window):
             # Step
             assert(len(sensorSDR) == 6)
             
-            self.h1.step(self.cs, [ sensorSDR, self.h1.getActionCs(1), self.h1.getActionCs(2) ], reward - 0.001 * distToOpponent, True)
+            self.h1.step(self.cs, [ sensorSDR, self.actions1[0], self.actions1[1] ], reward - distToOpponent * 0.001, True)
+
+            self.actions1[0] = list(self.h1.getActionCs(1))
+            self.actions1[1] = list(self.h1.getActionCs(2))
+
+            # Explore
+            for i in range(len(self.actions1)):
+                for j in range(len(self.actions1[i])):
+                    if np.random.rand() < self.epsilon:
+                        self.actions1[i][j] = np.random.randint(0, self.inputSizes[i + 1].z)
 
             # Actions
-            self.bot1LeftMotor = self.h1.getActionCs(1)[0] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
-            self.bot1RightMotor = self.h1.getActionCs(1)[1] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
+            self.bot1LeftMotor = self.actions1[0][0] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
+            self.bot1RightMotor = self.actions1[0][1] / (self.inputSizes[1].z - 1) * 2.0 - 1.0
 
-            self.bot1Boost = bool(self.h1.getActionCs(2)[0])
+            self.bot1Boost = bool(self.actions1[1][0])
 
     def update(self, dt):
         fixedDt = 0.017
